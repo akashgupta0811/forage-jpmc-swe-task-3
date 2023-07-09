@@ -23,10 +23,13 @@ class Graph extends Component<IProps, {}> {
     const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
 
     const schema = {
-      stock: 'string',
-      top_ask_price: 'float',
-      top_bid_price: 'float',
+      ratio: 'float', // New field to track the ratio
+      upper_bound: 'float', // Upper bound for trading opportunity
+      lower_bound: 'float', // Lower bound for trading opportunity
+      trigger_alert: 'boolean', // Indicates if the bounds are crossed
       timestamp: 'date',
+      price_abc: 'float', // Necessary to calculate the ratio
+      price_def: 'float', // Necessary to calculate the ratio
     };
 
     if (window.perspective && window.perspective.worker()) {
@@ -36,23 +39,24 @@ class Graph extends Component<IProps, {}> {
       // Load the `table` in the `<perspective-viewer>` DOM reference.
       elem.load(this.table);
       elem.setAttribute('view', 'y_line');
-      elem.setAttribute('column-pivots', '["stock"]');
       elem.setAttribute('row-pivots', '["timestamp"]');
-      elem.setAttribute('columns', '["top_ask_price"]');
+      elem.setAttribute('columns', '["ratio", "lower_bound", "upper_bound", "trigger_alert"]');
       elem.setAttribute('aggregates', JSON.stringify({
-        stock: 'distinctcount',
-        top_ask_price: 'avg',
-        top_bid_price: 'avg',
+        ratio: 'avg',
+        upper_bound: 'avg',
+        lower_bound: 'avg',
+        trigger_alert: 'bool',
         timestamp: 'distinct count',
+        price_abc: 'avg',
+        price_def: 'avg',
       }));
     }
   }
 
   componentDidUpdate() {
     if (this.table) {
-      this.table.update(
-        DataManipulator.generateRow(this.props.data),
-      );
+      const data = DataManipulator.generateRow(this.props.data);
+      this.table.update([data] as any);
     }
   }
 }
